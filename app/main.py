@@ -4,7 +4,7 @@ import logging
 
 load_dotenv()
 
-logging.basicConfig(filename='/var/log/webapp.log', level=logging.DEBUG)
+logging.basicConfig(filename='app.log', level=logging.DEBUG)
 
 app = Flask(__name__)
 
