@@ -1,0 +1,112 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "$defs": {
+        "membercostshare": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "deductible": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "_org": {
+                    "type": "string",
+                    "format": "hostname"
+                },
+                "copay": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "objectId": {
+                    "type": "string"
+                },
+                "objectType": {
+                    "enum": [
+                        "membercostshare"
+                    ]
+                }
+            }
+        }
+    },
+    "additionalProperties": false,
+    "properties": {
+        "planCostShares": {
+            "$ref": "#/$defs/membercostshare"
+        },
+        "linkedPlanServices": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "linkedService": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "_org": {
+                                "type": "string",
+                                "format": "hostname"
+                            },
+                            "objectId": {
+                                "type": "string"
+                            },
+                            "objectType": {
+                                "type": "string",
+                                "enum": ["service"]
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "planserviceCostShares": {
+                        "$ref": "#/$defs/membercostshare"
+                    },
+                    "_org": {
+                        "type": "string",
+                        "format": "hostname"
+                    },
+                    "objectId": {
+                        "type": "string"
+                    },
+                    "objectType": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "_org"
+            ]
+        },
+        "_org": {
+            "type": "string",
+            "format": "hostname"
+        },
+        "objectId": {
+            "type": "string"
+        },
+        "objectType": {
+            "enum": [
+                "plan"
+            ]
+        },
+        "planType": {
+            "enum": [
+                "inNetwork"
+            ]
+        },
+        "creationDate": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "planCostShares",
+        "linkedPlanServices",
+        "_org",
+        "objectId",
+        "objectType",
+        "planType",
+        "creationDate"
+    ]
+}
