@@ -4,6 +4,7 @@
     "$defs": {
         "membercostshare": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "deductible": { "type": "number", "minimum": 0 },
                 "_org": { "type": "string", "format": "hostname" },
@@ -14,15 +15,18 @@
             "required": [ "objectId", "objectType" ]
         }
     },
+    "additionalProperties": false,
     "properties": {
         "planCostShares": { "$ref": "#/$defs/membercostshare" },
         "linkedPlanServices": {
             "type": "array",
             "items": {
                 "type": "object",
+                "additionalProperties": false,
                 "properties": {
                     "linkedService": {
                         "type": "object",
+                        "additionalProperties": false,
                         "properties": {
                             "_org": { "type": "string", "format": "hostname" },
                             "objectId": { "type": "string" },
