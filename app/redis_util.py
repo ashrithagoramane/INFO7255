@@ -1,7 +1,9 @@
+import json
+import os
+
 import redis
 from dotenv import load_dotenv
-import os
-import json
+from werkzeug.exceptions import BadRequest, NotFound
 
 load_dotenv()
 
@@ -10,17 +12,26 @@ PORT = os.getenv("REDIS_SERVER_PORT", 6379)
 
 r = redis.Redis(host=HOST, port=PORT, decode_responses=True)
 
-def create_plan(json_data):
-    key = f'{json_data.get("objectId")}'
+def create(json_data):
+    key = f'{json_data.get("objectType")}:{json_data.get("objectId")}'
+    if r.exists(key):
+        raise BadRequest(f"{key} already exists")
     r.set(key, json.dumps(json_data))
     return json_data
 
-def get_plan(plan_id=None):
-    if plan_id:
-        plan = json.loads(r.get(f'{plan_id}'))
-        return plan
-    plans = [json.loads(r.get(key)) for key in r.keys()]
-    return plans
+def get(objectType=None, objectId=None):
+    if objectType and objectId:
+        key = f'{objectType}:{objectId}'
+        if not r.exists(key):
+            raise NotFound
+        object = json.loads(r.get(key))
+        return object
+    objects = [json.loads(r.get(key)) for key in r.keys()]
+    return objects
 
-def delete_plan(plan_id):
-    r.delete(f'{plan_id}')
+def delete(objectType, objectId):
+    key = f'{objectType}:{objectId}'
+    if objectType and objectId:
+        if not r.exists(key):
+            raise NotFound
+    r.delete(key)
