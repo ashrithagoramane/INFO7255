@@ -1,7 +1,7 @@
 import json
 import logging
 
-import redis_util
+import backend
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request
 from flask_expects_json import expects_json
@@ -28,35 +28,36 @@ def check_health():
 
 @app.route(VERSION + "/plan", methods=["POST"])
 @expects_json(schema=schema)
-def create_plan():
+def create_object():
     """
-    Create a plan
+    Create a object
     """
     try:
-        app.logger.info("Handling create plan request")
+        app.logger.info("Handling create object request")
         request_data = request.get_json()
-        response_data = redis_util.create(request_data)
+        response_data = backend.insert_object(request_data)
         etag = generate_etag(json.dumps(response_data).encode())
     except BadRequest as e:
         return {"message": f"{str(e)}"}, 400
     except Exception as e:
-        return {"message": "Invalid request JSON. Failed to create user"}, 400
+        return {"message": f"Invalid request JSON. Failed to create user {str(e)}"}, 400
     else:
         response = jsonify({"message": "Plan created successfully!"})
         response.set_etag(etag)
         return response, 201
 
 
-@app.route(VERSION + "/plan", methods=["GET"], defaults={"plan_id": None})
-@app.route(VERSION + "/plan/<plan_id>", methods=["GET"])
-def get_plan(plan_id):
+@app.route(VERSION + "/<object_type>", methods=["GET"], defaults={"object_id": None})
+@app.route(VERSION + "/<object_type>/<object_id>", methods=["GET"])
+def get_object(object_type, object_id):
     """
-    Get a plan
+    Get a object
     """
     try:
-        app.logger.info("Handling get plan request")
-        plan_details = redis_util.get("plan", plan_id)
-        etag = generate_etag(json.dumps(plan_details).encode())
+        app.logger.info("Handling get object request")
+        object_details = backend.get_object(object_type, object_id)
+
+        etag = generate_etag(json.dumps(object_details).encode())
 
         # Check if client's ETag matches with the current ETag
         if request.headers.get("If-None-Match") == etag:
@@ -67,19 +68,18 @@ def get_plan(plan_id):
     except Exception as e:
         return {"message": f"Invalid plan id. Failed to get plan {str(e)}"}, 400
     else:
-        response = jsonify(plan_details)
+        response = jsonify(object_details)
         response.set_etag(etag)
         return response
 
-
-@app.route(VERSION + "/plan/<plan_id>", methods=["DELETE"])
-def delete_plan(plan_id):
+@app.route(VERSION + "/<object_type>/<object_id>", methods=["DELETE"])
+def delete_object(object_type, object_id):
     """
-    Delete a plan
+    Delete an object
     """
     try:
         app.logger.info("Handling delete plan request")
-        redis_util.delete("plan", plan_id)
+        backend.delete_object(object_type, object_id)
     except NotFound as e:
         return Response(status=404)
     except Exception as e:

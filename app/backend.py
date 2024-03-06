@@ -1,7 +1,42 @@
 import new_redis_util as redis_util
+from werkzeug.exceptions import BadRequest
 
 OBJECT_TYPE = "objectType"
 OBJECT_ID = "objectId"
+
+
+def insert_object(object: dict = {}):
+    redisKey = f"{object.get(OBJECT_TYPE)}:{object.get(OBJECT_ID)}"
+    if redis_util.exists(redisKey):
+        raise BadRequest(f"Object already exists. Key: {redisKey}")
+    processObject(object)
+    return object
+
+
+def get_object(object_type: str, object_id: str = None):
+    if object_id:
+        return getObject(f"{object_type}:{object_id}")
+    else:
+        return_objects = []
+        all_object_keys = redis_util.get_keys(f"{object_type}:*")
+        for key in all_object_keys:
+            if len(key.split(":")) != 2:
+                continue
+            return_objects.append(getObject(key))
+        return return_objects
+
+
+def delete_object(object_type: str, object_id: str = None):
+    if object_id:
+        return getObject(f"{object_type}:{object_id}", delete=True)
+    else:
+        return_objects = []
+        all_object_keys = redis_util.get_keys(f"{object_type}:*")
+        for key in all_object_keys:
+            if len(key.split(":")) != 2:
+                continue
+            return_objects.append(getObject(key, delete=True))
+        return return_objects
 
 
 def processList(objects: list = []):

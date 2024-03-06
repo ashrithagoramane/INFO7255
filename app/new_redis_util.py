@@ -46,3 +46,6 @@ def smembers(key: str):
 
 def delete_keys(keys: list):
     r.delete(*keys)
+
+def exists(key: str):
+    return r.exists(key)
