@@ -1,4 +1,4 @@
-import new_redis_util as redis_util
+import redis_util as redis_util
 from werkzeug.exceptions import BadRequest
 
 OBJECT_TYPE = "objectType"
