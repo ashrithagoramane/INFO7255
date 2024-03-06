@@ -22,3 +22,18 @@ def hset(key: str, value: dict):
 def sadd(key: str, value: str):
     print(f"Adding {key}")
     r.sadd(key, value)
+
+def get_keys(pattern: str):
+    return r.keys(pattern)
+
+def hgetall(key: str):
+    return r.hgetall(key)
+
+def get_type(key: str):
+    return r.type(key)
+
+def get(key: str):
+    return r.get(key)
+
+def smembers(key: str):
+    return r.smembers(key)
