@@ -46,6 +46,26 @@ def create_object():
         response.set_etag(etag)
         return response, 201
 
+@app.route(VERSION + "/plan", methods=["PATCH"])
+@expects_json(schema=schema)
+def patch_object():
+    try:
+        app.logger.info("Handling patch object request")
+        request_data = request.get_json()
+        response_data = backend.patch_object(request_data)
+        etag = generate_etag(json.dumps(response_data).encode())
+
+        # Check if client's ETag matches with the current ETag
+        # if request.headers.get("If-None-Match") == etag:
+        #     return Response(status=304)
+    except BadRequest as e:
+        return {"message": f"{str(e)}"}, 400
+    except Exception as e:
+        return {"message": f"Invalid request JSON. Failed to create user {str(e)}"}, 400
+    else:
+        response = jsonify({"message": "Plan patched successfully!"})
+        response.set_etag(etag)
+        return response, 200
 
 @app.route(VERSION + "/<object_type>", methods=["GET"], defaults={"object_id": None})
 @app.route(VERSION + "/<object_type>/<object_id>", methods=["GET"])

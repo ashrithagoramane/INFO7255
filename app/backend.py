@@ -38,6 +38,9 @@ def delete_object(object_type: str, object_id: str = None):
             return_objects.append(getObject(key, delete=True))
         return return_objects
 
+def patch_object(object: dict = {}):
+    processObject(object)
+    return object
 
 def processList(objects: list = []):
     return_list = []
