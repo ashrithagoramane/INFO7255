@@ -7,6 +7,8 @@ from flask import Flask, Response, jsonify, request
 from flask_expects_json import expects_json
 from werkzeug.exceptions import BadRequest, NotFound
 from werkzeug.http import generate_etag
+import os
+from authentication import token_required
 
 load_dotenv()
 
@@ -15,6 +17,7 @@ VERSION = "/v1"
 logging.basicConfig(filename="app.log", level=logging.DEBUG)
 schema = json.load(open("./schemas/plan_schema.json"))
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 
 @app.route(VERSION + "/health", methods=["GET"])
@@ -46,6 +49,7 @@ def create_object():
         response.set_etag(etag)
         return response, 201
 
+
 @app.route(VERSION + "/plan", methods=["PATCH"])
 @expects_json(schema=schema)
 def patch_object():
@@ -66,6 +70,7 @@ def patch_object():
         response = jsonify({"message": "Plan patched successfully!"})
         response.set_etag(etag)
         return response, 200
+
 
 @app.route(VERSION + "/<object_type>", methods=["GET"], defaults={"object_id": None})
 @app.route(VERSION + "/<object_type>/<object_id>", methods=["GET"])
@@ -92,6 +97,7 @@ def get_object(object_type, object_id):
         response.set_etag(etag)
         return response
 
+
 @app.route(VERSION + "/<object_type>/<object_id>", methods=["DELETE"])
 def delete_object(object_type, object_id):
     """
@@ -106,6 +112,13 @@ def delete_object(object_type, object_id):
         return {"message": f"Invalid plan id. Failed to delete plan {str(e)}"}, 400
     else:
         return Response(status=204)
+
+
+@app.route("/protected")
+@token_required
+def protected_route(token_info):
+    # Here you have access to token_info, which contains information about the validated token
+    return jsonify({"message": "Welcome!"})
 
 
 if __name__ == "__main__":
