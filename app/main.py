@@ -31,6 +31,7 @@ def check_health():
 
 @app.route(VERSION + "/plan", methods=["POST"])
 @expects_json(schema=schema)
+@token_required
 def create_object():
     """
     Create a object
@@ -52,6 +53,7 @@ def create_object():
 
 @app.route(VERSION + "/plan", methods=["PATCH"])
 @expects_json(schema=schema)
+@token_required
 def patch_object():
     try:
         app.logger.info("Handling patch object request")
@@ -74,6 +76,7 @@ def patch_object():
 
 @app.route(VERSION + "/<object_type>", methods=["GET"], defaults={"object_id": None})
 @app.route(VERSION + "/<object_type>/<object_id>", methods=["GET"])
+@token_required
 def get_object(object_type, object_id):
     """
     Get a object
@@ -99,6 +102,7 @@ def get_object(object_type, object_id):
 
 
 @app.route(VERSION + "/<object_type>/<object_id>", methods=["DELETE"])
+@token_required
 def delete_object(object_type, object_id):
     """
     Delete an object

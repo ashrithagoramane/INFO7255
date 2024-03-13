@@ -49,13 +49,7 @@ def token_required(f):
 
         id_info = validate_id_token(token)
         if id_info:
-            kwargs["token_info"] = id_info
             return f(*args, **kwargs)
-
-        # access_token_info = validate_access_token(token)
-        # if access_token_info:
-        #     kwargs["token_info"] = access_token_info
-        #     return f(*args, **kwargs)
 
         return jsonify({"message": "Token is invalid"}), 401
 
