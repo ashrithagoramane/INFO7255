@@ -29,7 +29,15 @@ def get_keys(pattern: str):
 
 
 def hgetall(key: str):
-    return r.hgetall(key)
+    values = r.hgetall(key)
+    for k,v  in values.items():
+        try:
+            values[k] = int(v)
+        except ValueError:
+            pass
+    return values
+
+
 
 
 def get_type(key: str):
