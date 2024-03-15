@@ -40,7 +40,8 @@ def create_object():
         app.logger.info("Handling create object request")
         request_data = request.get_json()
         response_data = backend.insert_object(request_data)
-        etag = generate_etag(json.dumps(response_data).encode())
+        etag = generate_etag(jsonify(response_data).get_data())
+
     except BadRequest as e:
         return {"message": f"{str(e)}"}, 400
     except Exception as e:
@@ -51,19 +52,27 @@ def create_object():
         return response, 201
 
 
-@app.route(VERSION + "/plan", methods=["PATCH"])
+@app.route(VERSION + "/<object_type>/<object_id>", methods=["PATCH"])
 @expects_json(schema=schema)
 @token_required
-def patch_object():
+def patch_object(object_type, object_id):
     try:
         app.logger.info("Handling patch object request")
         request_data = request.get_json()
+
+        object_details = backend.get_object(object_type, object_id)
+        etag = generate_etag(jsonify(object_details).get_data())
+
+        # Check if client's ETag matches with the current ETag
+        if (
+            not request.headers.get("If-None-Match")
+            and request.headers.get("If-None-Match") == etag
+        ):
+            return Response(status=412)
+
         response_data = backend.patch_object(request_data)
         etag = generate_etag(json.dumps(response_data).encode())
 
-        # Check if client's ETag matches with the current ETag
-        # if request.headers.get("If-None-Match") == etag:
-        #     return Response(status=304)
     except BadRequest as e:
         return {"message": f"{str(e)}"}, 400
     except Exception as e:
@@ -84,8 +93,7 @@ def get_object(object_type, object_id):
     try:
         app.logger.info("Handling get object request")
         object_details = backend.get_object(object_type, object_id)
-
-        etag = generate_etag(json.dumps(object_details).encode())
+        etag = generate_etag(jsonify(object_details).get_data())
 
         # Check if client's ETag matches with the current ETag
         if request.headers.get("If-None-Match") == etag:
