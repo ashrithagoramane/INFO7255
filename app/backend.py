@@ -90,14 +90,16 @@ def getObject(redisKey: str, delete: bool = False):
         if key == redisKey:
             simple_values = redis_util.hgetall(key)
             object.update(simple_values)
-        else:
+        elif key.startswith(f"{redisKey}::"):
             if redis_util.get_type(key) == "string":
-                object[key.split("::")[-1]] = getObject(redis_util.get(key))
+                object[key.split("::")[-1]] = getObject(redis_util.get(key), delete)
             elif redis_util.get_type(key) == "set":
                 set_members = redis_util.smembers(key)
                 object[key.split("::")[-1]] = [
-                    getObject(sub_key) for sub_key in set_members
+                    getObject(sub_key, delete) for sub_key in set_members
                 ]
+        else:
+            all_keys.remove(key)
     if delete:
         redis_util.delete_keys(all_keys)
 
