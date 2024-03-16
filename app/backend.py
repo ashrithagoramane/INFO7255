@@ -28,6 +28,9 @@ def get_object(object_type: str, object_id: str = None):
 
 def delete_object(object_type: str, object_id: str = None):
     if object_id:
+        redisKey = f"{object_type}:{object_id}"
+        if not redis_util.exists(redisKey):
+            raise BadRequest(f"{object_type} with id {object_id} not present")
         return getObject(f"{object_type}:{object_id}", delete=True)
     else:
         return_objects = []
@@ -38,9 +41,14 @@ def delete_object(object_type: str, object_id: str = None):
             return_objects.append(getObject(key, delete=True))
         return return_objects
 
-def patch_object(object: dict = {}):
+
+def patch_object(object_type: str, object_id: str, object: dict = {}):
+    redisKey = f"{object_type}:{object_id}"
+    if not redis_util.exists(redisKey):
+        raise BadRequest(f"{object_type} with id {object_id} not present")
     processObject(object)
     return object
+
 
 def processList(objects: list = []):
     return_list = []
@@ -92,14 +100,15 @@ def getObject(redisKey: str, delete: bool = False):
             object.update(simple_values)
         elif key.startswith(f"{redisKey}::"):
             if redis_util.get_type(key) == "string":
-                object[key.split("::")[-1]] = getObject(redis_util.get(key), delete)
+                object[key.split("::")[-1]] = getObject(redis_util.get(key))
             elif redis_util.get_type(key) == "set":
                 set_members = redis_util.smembers(key)
                 object[key.split("::")[-1]] = [
-                    getObject(sub_key, delete) for sub_key in set_members
+                    getObject(sub_key) for sub_key in set_members
                 ]
         else:
-            all_keys.remove(key)
+            if delete:
+                all_keys.remove(key)
     if delete:
         redis_util.delete_keys(all_keys)
 

@@ -39,15 +39,18 @@ def create_object():
     try:
         app.logger.info("Handling create object request")
         request_data = request.get_json()
-        response_data = backend.insert_object(request_data)
-        etag = generate_etag(jsonify(response_data).get_data())
-
+        backend.insert_object(request_data)
+        
     except BadRequest as e:
         return {"message": f"{str(e)}"}, 400
     except Exception as e:
         return {"message": f"Invalid request JSON. Failed to create user {str(e)}"}, 400
     else:
         response = jsonify({"message": "Plan created successfully!"})
+        object_details = backend.get_object(
+            request_data.get("objectType"), request_data.get("objectId")
+        )
+        etag = generate_etag(jsonify(object_details).get_data())
         response.set_etag(etag)
         return response, 201
 
@@ -60,18 +63,18 @@ def patch_object(object_type, object_id):
         app.logger.info("Handling patch object request")
         request_data = request.get_json()
 
+        # Check if client's ETag matches with the current ETag
+        if not request.headers.get("If-None-Match"):
+            return Response(status=412)
+        
         object_details = backend.get_object(object_type, object_id)
         etag = generate_etag(jsonify(object_details).get_data())
 
         # Check if client's ETag matches with the current ETag
-        if (
-            not request.headers.get("If-None-Match")
-            and request.headers.get("If-None-Match") == etag
-        ):
+        if request.headers.get("If-None-Match") != etag:
             return Response(status=412)
 
-        response_data = backend.patch_object(request_data)
-        etag = generate_etag(json.dumps(response_data).encode())
+        backend.patch_object(object_type, object_id, request_data)
 
     except BadRequest as e:
         return {"message": f"{str(e)}"}, 400
@@ -79,6 +82,8 @@ def patch_object(object_type, object_id):
         return {"message": f"Invalid request JSON. Failed to create user {str(e)}"}, 400
     else:
         response = jsonify({"message": "Plan patched successfully!"})
+        object_details = backend.get_object(object_type, object_id)
+        etag = generate_etag(jsonify(object_details).get_data())
         response.set_etag(etag)
         return response, 200
 
