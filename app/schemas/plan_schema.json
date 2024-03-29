@@ -1,0 +1,61 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "type": "object",
+    "$defs": {
+        "membercostshare": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "deductible": { "type": "number", "minimum": 0 },
+                "_org": { "type": "string", "format": "hostname" },
+                "copay": { "type": "number", "minimum": 0 },
+                "objectId": { "type": "string" },
+                "objectType": { "const": "membercostshare" }
+            },
+            "required": [ "objectId", "objectType" ]
+        }
+    },
+    "additionalProperties": false,
+    "properties": {
+        "planCostShares": { "$ref": "#/$defs/membercostshare" },
+        "linkedPlanServices": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "linkedService": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                            "_org": { "type": "string", "format": "hostname" },
+                            "objectId": { "type": "string" },
+                            "objectType": { "const": "service" },
+                            "name": { "type": "string" }
+                        },
+                        "required": [ "objectId", "objectType" ]
+                    },
+                    "planserviceCostShares": { "$ref": "#/$defs/membercostshare" },
+                    "_org": { "type": "string", "format": "hostname" },
+                    "objectId": { "type": "string" },
+                    "objectType": { "type": "string" }
+                },
+                "required": [ "objectId", "objectType" ]
+            }
+        },
+        "_org": { "type": "string", "format": "hostname" },
+        "objectId": { "type": "string" },
+        "objectType": { "const": "plan" },
+        "planType": { "enum": [ "inNetwork" ] },
+        "creationDate": { "type": "string" }
+    },
+    "required": [
+        "planCostShares",
+        "linkedPlanServices",
+        "_org",
+        "objectId",
+        "objectType",
+        "planType",
+        "creationDate"
+    ]
+}
