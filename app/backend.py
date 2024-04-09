@@ -95,10 +95,17 @@ def processObject(object: dict = {}):
     return redisKey
 
 
-def getObject(redisKey: str, delete: bool = False):
+def getObject(redisKey: str, delete: bool = False, parent: str = None, maxCard: int = 0):
     object = {}
 
     all_keys = redis_util.get_keys(f"{redisKey}*")
+
+    if parent and delete and maxCard < 1:
+        # Removing parent from inverse list only of any of it's parent 
+        # is not linked with an object
+        redis_util.srem(f"{redisKey}::{INVERSE_KEYWORD}", parent)
+
+    maxCard = max(redis_util.scard(f"{redisKey}::{INVERSE_KEYWORD}"), maxCard)
 
     for key in all_keys:
         if key == redisKey:
@@ -108,16 +115,18 @@ def getObject(redisKey: str, delete: bool = False):
             continue
         elif key.startswith(f"{redisKey}::"):
             if redis_util.get_type(key) == "string":
-                object[key.split("::")[-1]] = getObject(redis_util.get(key))
+                object[key.split("::")[-1]] = getObject(redis_util.get(key), delete, redisKey, maxCard)
             elif redis_util.get_type(key) == "set":
                 set_members = redis_util.smembers(key)
                 object[key.split("::")[-1]] = [
-                    getObject(sub_key) for sub_key in set_members
+                    getObject(sub_key, delete, redisKey, maxCard) for sub_key in set_members
                 ]
         else:
             if delete:
                 all_keys.remove(key)
-    if delete:
+
+    if delete and redis_util.is_set_empty(f"{redisKey}::{INVERSE_KEYWORD}"):
+        # If object is not linked in any parent object delete it's corresponding keys
         redis_util.delete_keys(all_keys)
 
     return object

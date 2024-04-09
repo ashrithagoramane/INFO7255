@@ -60,12 +60,16 @@ def is_set_empty(key: str):
         return False
     return True
 
+def scard(key: str):
+    if r.exists(key):
+        return r.scard(key)
+    return 0
 
 def delete_keys(keys: list):
+    if not keys:
+        return
     r.delete(*keys)
 
-def delete_key(key: str):
-    r.delete(key)
 
 def exists(key: str):
     return r.exists(key)
