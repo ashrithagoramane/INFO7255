@@ -1,5 +1,5 @@
 import redis_util as redis_util
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, NotFound
 
 OBJECT_TYPE = "objectType"
 OBJECT_ID = "objectId"
@@ -97,7 +97,10 @@ def processObject(object: dict = {}):
 
 def getObject(redisKey: str, delete: bool = False, parent: str = None, maxCard: int = 0):
     object = {}
-
+    
+    if not redis_util.exists(redisKey):
+        raise NotFound(f"{redisKey} not found in database")
+    
     all_keys = redis_util.get_keys(f"{redisKey}*")
 
     if parent and delete and maxCard < 1:
