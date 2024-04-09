@@ -51,9 +51,21 @@ def get(key: str):
 def smembers(key: str):
     return r.smembers(key)
 
+def srem(key: str, member: str):
+    if r.sismember(key, member):
+        r.srem(key, member)
+
+def is_set_empty(key: str):
+    if r.scard(key):
+        return False
+    return True
+
 
 def delete_keys(keys: list):
     r.delete(*keys)
+
+def delete_key(key: str):
+    r.delete(key)
 
 def exists(key: str):
     return r.exists(key)

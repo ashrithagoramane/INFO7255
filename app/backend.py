@@ -3,7 +3,7 @@ from werkzeug.exceptions import BadRequest
 
 OBJECT_TYPE = "objectType"
 OBJECT_ID = "objectId"
-
+INVERSE_KEYWORD = "INVERSE"
 
 def insert_object(object: dict = {}):
     redisKey = f"{object.get(OBJECT_TYPE)}:{object.get(OBJECT_ID)}"
@@ -75,12 +75,18 @@ def processObject(object: dict = {}):
             # Add link of sub object to current object
             redis_sub_key = f"{redisKey}::{attribute}"
             redis_util.set(redis_sub_key, object_redis_key)
+            
+            # Add inverse link
+            redis_util.sadd(f"{object_redis_key}::{INVERSE_KEYWORD}", redisKey)
         elif isinstance(value, list):
             processed_list = processList(value)
             # Add values to set (list of linked objects)
             for val in processed_list:
                 redis_sub_key = f"{redisKey}::{attribute}"
                 redis_util.sadd(redis_sub_key, val)
+                
+                # Add inverse of link
+                redis_util.sadd(f"{val}::{INVERSE_KEYWORD}", redisKey)
         else:
             simple_values[attribute] = str(value)
 
@@ -98,6 +104,8 @@ def getObject(redisKey: str, delete: bool = False):
         if key == redisKey:
             simple_values = redis_util.hgetall(key)
             object.update(simple_values)
+        elif key.startswith(f"{redisKey}::{INVERSE_KEYWORD}"):
+            continue
         elif key.startswith(f"{redisKey}::"):
             if redis_util.get_type(key) == "string":
                 object[key.split("::")[-1]] = getObject(redis_util.get(key))
