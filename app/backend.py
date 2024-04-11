@@ -1,5 +1,6 @@
 import redis_util as redis_util
 from werkzeug.exceptions import BadRequest, NotFound
+import rabbitmq_util
 
 OBJECT_TYPE = "objectType"
 OBJECT_ID = "objectId"
@@ -91,6 +92,7 @@ def processObject(object: dict = {}):
             simple_values[attribute] = str(value)
 
     redis_util.hset(redisKey, simple_values)
+    rabbitmq_util.push_to_queue(simple_values)
 
     return redisKey
 

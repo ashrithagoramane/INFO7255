@@ -1,3 +1,5 @@
 flask
 python-dotenv
 flask-expects-json
+redis
+pika

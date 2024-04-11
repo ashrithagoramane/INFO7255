@@ -2,13 +2,12 @@ import os
 
 import redis
 from dotenv import load_dotenv
-from werkzeug.exceptions import BadRequest
 
 load_dotenv()
 
 HOST = os.getenv("REDIS_SERVER_HOST", "localhost")
 PORT = os.getenv("REDIS_SERVER_PORT", 6379)
-
+queue_name = os.getenv("QUEUE_NAME", "indexing_queue")
 r = redis.Redis(host=HOST, port=PORT, decode_responses=True)
 
 
