@@ -1,0 +1,128 @@
+# Click the Variables button, above, to create your own variables.
+GET ${exampleVariable1} // _search
+{
+  "query": {
+    "${exampleVariable2}": {} // match_all
+  }
+}
+GET /webapp/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+#get Parent who has children with type planserviceCostShares and copay > 1
+GET /webapp/_search
+{
+  "query": {
+    "has_child": {
+      "type": "planserviceCostShares",
+      "query": {
+        "range": {
+          "copay": {
+            "gte": 1
+          }
+        }
+      }
+    }
+  }
+}
+# Get child object where parent is linkedPlanservices and ObjectId as 27283xvx9asdff-504 
+GET /webapp/_search
+{
+  "query": {
+    "has_parent": {
+      "parent_type": "linkedPlanServices",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "objectId": "27283xvx9asdff-504"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+# Get parent with type as plan
+GET /webapp/_search
+{
+  "query": {
+    "has_parent": {
+      "parent_type": "plan",
+      "query": {
+        "match_all": {}
+      }
+    }
+  }
+}
+#Child
+GET /webapp/_search
+{
+  "query": {
+    "has_child": {
+      "type": "planserviceCostShares",
+      "query": {
+        "range": {
+          "copay": {
+            "gte": 0
+          }
+        }
+      }
+    }
+  }
+}
+#Failed Query 1
+GET /webapp/_search
+{
+  "query": {
+    "has_parent": {
+      "parent_type": "planserviceCostShares",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "objectId": "1234512xvc1314asdfs-503"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+# Failed Query 2
+GET /webapp/_search
+{
+  "query": {
+    "has_parent": {
+      "parent_type": "planservice",
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "objectId": "1234512xvc1314asdfs-503"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+# Get object with id
+GET /webapp/_search
+{
+  "query": {
+    "match": {
+      "objectId": "27283xvx9asdff-504"
+    }
+  }
+}
+# Delete
+DELETE /webapp
