@@ -51,12 +51,12 @@ def patch_object(object_type: str, object_id: str, object: dict = {}):
     return object
 
 
-def processList(objects: list = []):
+def processList(objects: list = [], parent: str = None, child_type: str = None):
     return_list = []
 
     for item in objects:
         if isinstance(item, dict):
-            value = str(processObject(item))
+            value = str(processObject(item, parent, child_type))
         elif isinstance(item, list):
             pass
         else:
@@ -66,13 +66,13 @@ def processList(objects: list = []):
     return return_list
 
 
-def processObject(object: dict = {}):
+def processObject(object: dict = {}, parent: str = None, child_type: str = None):
     redisKey = f"{object.get(OBJECT_TYPE)}:{object.get(OBJECT_ID)}"
 
     simple_values = {}
     for attribute, value in object.items():
         if isinstance(value, dict):
-            object_redis_key = processObject(value)
+            object_redis_key = processObject(value, object.get(OBJECT_ID), attribute)
             # Add link of sub object to current object
             redis_sub_key = f"{redisKey}::{attribute}"
             redis_util.set(redis_sub_key, object_redis_key)
@@ -80,7 +80,7 @@ def processObject(object: dict = {}):
             # Add inverse link
             redis_util.sadd(f"{object_redis_key}::{INVERSE_KEYWORD}", redisKey)
         elif isinstance(value, list):
-            processed_list = processList(value)
+            processed_list = processList(value, object.get(OBJECT_ID), attribute)
             # Add values to set (list of linked objects)
             for val in processed_list:
                 redis_sub_key = f"{redisKey}::{attribute}"
@@ -92,8 +92,7 @@ def processObject(object: dict = {}):
             simple_values[attribute] = str(value)
 
     redis_util.hset(redisKey, simple_values)
-    rabbitmq_util.push_to_queue(simple_values)
-
+    process_and_push_to_queue(simple_values, parent, child_type)
     return redisKey
 
 
@@ -135,3 +134,17 @@ def getObject(redisKey: str, delete: bool = False, parent: str = None, maxCard: 
         redis_util.delete_keys(all_keys)
 
     return object
+
+
+def process_and_push_to_queue(data, parent_id, child_type):
+    data["plan_join"] = dict()
+    if parent_id:
+        data["plan_join"]["name"] = child_type
+        data["plan_join"]["parent"] = parent_id
+    elif data.get(OBJECT_TYPE) in ["plan", "planservice"]:
+        if data.get(OBJECT_TYPE) == "planservice":
+            data["plan_join"]["name"] = "linkedPlanServices"
+        else:
+            data["plan_join"]["name"] = data.get(OBJECT_TYPE)
+    print(data)
+    rabbitmq_util.push_to_queue(data)

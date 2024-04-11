@@ -1,0 +1,11 @@
+{
+    "properties": {
+        "plan_join": {
+            "type": "join",
+            "relations": {
+                "plan": [ "planCostShares", "linkedPlanServices" ],
+                "linkedPlanServices": [ "planserviceCostShares", "linkedService" ]
+            }
+        }
+    }
+}

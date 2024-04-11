@@ -33,7 +33,8 @@ def create_elasticsearch_index():
 def index_to_elasticsearch(data):
     try:
         json_data = json.loads(data)
-        es.index(index=ELASTICSEARCH_INDEX, body=json_data, id=json_data.get("objectId"))
+        routing = json_data.get("plan_join", dict()).get("parent")
+        es.index(index=ELASTICSEARCH_INDEX, routing=routing, body=json_data, id=json_data.get("objectId"))
         print(f"Indexed data: {json_data}")
     except Exception as e:
         print(f"Error indexing data: {e}")
@@ -54,7 +55,7 @@ def consume_from_queue():
 
 
 if __name__ == '__main__':
-    # create_elasticsearch_index()
+    create_elasticsearch_index()
     while True:
         consume_from_queue()
         time.sleep(1)  # Adjust the sleep duration as needed
