@@ -44,6 +44,10 @@ def delete_object(object_type: str, object_id: str = None):
 
 
 def patch_object(object_type: str, object_id: str, object: dict = {}):
+    if object_id != object.get(OBJECT_ID):
+        raise BadRequest(
+            f"ObjectId in body({object.get(OBJECT_ID)} and route({object.get(OBJECT_ID)}) mismatch"
+        )
     redisKey = f"{object_type}:{object_id}"
     if not redis_util.exists(redisKey):
         raise BadRequest(f"{object_type} with id {object_id} not present")
@@ -126,8 +130,7 @@ def getObject(redisKey: str, delete: bool = False, parent: str = None, maxCard: 
                     getObject(sub_key, delete, redisKey, maxCard) for sub_key in set_members
                 ]
         else:
-            if delete:
-                all_keys.remove(key)
+            all_keys.remove(key)
 
     if delete and redis_util.is_set_empty(f"{redisKey}::{INVERSE_KEYWORD}"):
         # If object is not linked in any parent object delete it's corresponding keys

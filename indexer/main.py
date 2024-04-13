@@ -5,6 +5,8 @@ import time
 import pika
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
+import warnings
+warnings.filterwarnings("ignore")
 
 load_dotenv()
 
