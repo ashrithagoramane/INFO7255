@@ -31,7 +31,7 @@ def delete_object(object_type: str, object_id: str = None):
     if object_id:
         redisKey = f"{object_type}:{object_id}"
         if not redis_util.exists(redisKey):
-            raise BadRequest(f"{object_type} with id {object_id} not present")
+            raise NotFound(f"{object_type} with id {object_id} not present")
         return getObject(f"{object_type}:{object_id}", delete=True)
     else:
         return_objects = []
